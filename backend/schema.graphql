@@ -16,11 +16,11 @@ type Query {
 }
 
 type Mutation {
-  sendMessage(input: MessageInput!): Message
+  sendMessage(input: MessageInput!): Message!
 }
 
 type Subscription {
-  messageSent(room: ID!): Message @aws_subscribe(mutations: ["sendMessage"])
+  messageSent(room: ID!): Message! @aws_subscribe(mutations: ["sendMessage"])
 }
 
 schema {

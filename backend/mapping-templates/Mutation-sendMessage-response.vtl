@@ -1,4 +1,3 @@
-#set($result = $context.args.input)
+#set($result = $ctx.result)
 $util.qr($result.put("sentAt", $util.time.nowFormatted("yyyy-MM-dd'T'HH:mm:ss[XXXXX]")))
-
-$result
+$util.toJson($result)
