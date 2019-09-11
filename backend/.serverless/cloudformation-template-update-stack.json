@@ -1,0 +1,180 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "AppSyncLoggingServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "devNowhereChatApiServerless-AppSyncLoggingServiceRole",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "appsync.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "CloudWatchLogsAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "GraphQlApi": {
+      "Type": "AWS::AppSync::GraphQLApi",
+      "Properties": {
+        "Name": "devNowhereChatApiServerless",
+        "AuthenticationType": "API_KEY",
+        "AdditionalAuthenticationProviders": [],
+        "LogConfig": {
+          "CloudWatchLogsRoleArn": {
+            "Fn::GetAtt": [
+              "AppSyncLoggingServiceRole",
+              "Arn"
+            ]
+          },
+          "FieldLogLevel": "ALL"
+        }
+      }
+    },
+    "GraphQlApiLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "/",
+            [
+              "/aws/appsync/apis",
+              {
+                "Fn::GetAtt": [
+                  "GraphQlApi",
+                  "ApiId"
+                ]
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "GraphQlApiKeyDefault": {
+      "Type": "AWS::AppSync::ApiKey",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "Description": "serverless-appsync-plugin: AppSync API Key for GraphQlApiKeyDefault",
+        "Expires": 1599748952
+      }
+    },
+    "GraphQlSchema": {
+      "Type": "AWS::AppSync::GraphQLSchema",
+      "Properties": {
+        "Definition": "type Message {\n  room: String!\n  user: String!\n  message: String!\n  sentAt: AWSDateTime!\n}\n\ninput MessageInput {\n  room: String!\n  user: String!\n  message: String!\n}\n\ntype Query {\n  dummy: String\n}\n\ntype Mutation {\n  sendMessage(input: MessageInput!): Message\n}\n\ntype Subscription {\n  messageSent(room: ID!): Message @aws_subscribe(mutations: [\"sendMessage\"])\n}\n\nschema {\n  query: Query\n  mutation: Mutation\n  subscription: Subscription\n}\n",
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        }
+      }
+    },
+    "GraphQlDsNone": {
+      "Type": "AWS::AppSync::DataSource",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "Name": "None",
+        "Type": "NONE"
+      }
+    },
+    "GraphQlResolverMutationsendMessage": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "sendMessage",
+        "RequestMappingTemplate": "{}",
+        "ResponseMappingTemplate": "#set($result = $context.args.input)\n$util.qr($result.put(\"sentAt\", $util.time.nowFormatted(\"yyyy-MM-dd'T'HH:mm:ss[XXXXX]\")))\n\n$result",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsNone",
+            "Name"
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      }
+    },
+    "GraphQlApiUrl": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GraphQlApi",
+          "GraphQLUrl"
+        ]
+      }
+    },
+    "GraphQlApiKeyDefault": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GraphQlApiKeyDefault",
+          "ApiKey"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,311 @@
+{
+  "service": {
+    "service": "NowhereChatApiServerless",
+    "serviceObject": {
+      "name": "NowhereChatApiServerless"
+    },
+    "provider": {
+      "stage": "dev",
+      "variableSyntax": "\\${([ ~:a-zA-Z0-9._@'\",\\-\\/\\(\\)*]+?)}",
+      "name": "aws",
+      "region": "us-east-1",
+      "runtime": "nodejs8.10",
+      "versionFunctions": true,
+      "remoteFunctionData": null,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "AppSyncLoggingServiceRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "RoleName": "devNowhereChatApiServerless-AppSyncLoggingServiceRole",
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "appsync.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": "CloudWatchLogsAccess",
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Action": [
+                          "logs:CreateLogGroup",
+                          "logs:CreateLogStream",
+                          "logs:PutLogEvents"
+                        ],
+                        "Effect": "Allow",
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "GraphQlApi": {
+            "Type": "AWS::AppSync::GraphQLApi",
+            "Properties": {
+              "Name": "devNowhereChatApiServerless",
+              "AuthenticationType": "API_KEY",
+              "AdditionalAuthenticationProviders": [],
+              "LogConfig": {
+                "CloudWatchLogsRoleArn": {
+                  "Fn::GetAtt": [
+                    "AppSyncLoggingServiceRole",
+                    "Arn"
+                  ]
+                },
+                "FieldLogLevel": "ALL"
+              }
+            }
+          },
+          "GraphQlApiLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "/aws/appsync/apis",
+                    {
+                      "Fn::GetAtt": [
+                        "GraphQlApi",
+                        "ApiId"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            }
+          },
+          "GraphQlApiKeyDefault": {
+            "Type": "AWS::AppSync::ApiKey",
+            "Properties": {
+              "ApiId": {
+                "Fn::GetAtt": [
+                  "GraphQlApi",
+                  "ApiId"
+                ]
+              },
+              "Description": "serverless-appsync-plugin: AppSync API Key for GraphQlApiKeyDefault",
+              "Expires": 1599748952
+            }
+          },
+          "GraphQlSchema": {
+            "Type": "AWS::AppSync::GraphQLSchema",
+            "Properties": {
+              "Definition": "type Message {\n  room: String!\n  user: String!\n  message: String!\n  sentAt: AWSDateTime!\n}\n\ninput MessageInput {\n  room: String!\n  user: String!\n  message: String!\n}\n\ntype Query {\n  dummy: String\n}\n\ntype Mutation {\n  sendMessage(input: MessageInput!): Message\n}\n\ntype Subscription {\n  messageSent(room: ID!): Message @aws_subscribe(mutations: [\"sendMessage\"])\n}\n\nschema {\n  query: Query\n  mutation: Mutation\n  subscription: Subscription\n}\n",
+              "ApiId": {
+                "Fn::GetAtt": [
+                  "GraphQlApi",
+                  "ApiId"
+                ]
+              }
+            }
+          },
+          "GraphQlDsNone": {
+            "Type": "AWS::AppSync::DataSource",
+            "Properties": {
+              "ApiId": {
+                "Fn::GetAtt": [
+                  "GraphQlApi",
+                  "ApiId"
+                ]
+              },
+              "Name": "None",
+              "Type": "NONE"
+            }
+          },
+          "GraphQlResolverMutationsendMessage": {
+            "Type": "AWS::AppSync::Resolver",
+            "DependsOn": "GraphQlSchema",
+            "Properties": {
+              "ApiId": {
+                "Fn::GetAtt": [
+                  "GraphQlApi",
+                  "ApiId"
+                ]
+              },
+              "TypeName": "Mutation",
+              "FieldName": "sendMessage",
+              "RequestMappingTemplate": "{}",
+              "ResponseMappingTemplate": "#set($result = $context.args.input)\n$util.qr($result.put(\"sentAt\", $util.time.nowFormatted(\"yyyy-MM-dd'T'HH:mm:ss[XXXXX]\")))\n\n$result",
+              "DataSourceName": {
+                "Fn::GetAtt": [
+                  "GraphQlDsNone",
+                  "Name"
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          },
+          "GraphQlApiUrl": {
+            "Value": {
+              "Fn::GetAtt": [
+                "GraphQlApi",
+                "GraphQLUrl"
+              ]
+            }
+          },
+          "GraphQlApiKeyDefault": {
+            "Value": {
+              "Fn::GetAtt": [
+                "GraphQlApiKeyDefault",
+                "ApiKey"
+              ]
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      }
+    },
+    "custom": {
+      "api": "devNowhereChatApiServerless",
+      "appSync": {
+        "name": "devNowhereChatApiServerless",
+        "authenticationType": "API_KEY",
+        "logConfig": {
+          "loggingRoleArn": {
+            "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GraphQlApi\"][\"Properties\"][\"LogConfig\"][\"CloudWatchLogsRoleArn\"]"
+          },
+          "level": "ALL"
+        },
+        "schema": "./schema.graphql",
+        "dataSources": [
+          {
+            "type": "NONE",
+            "name": "None"
+          }
+        ],
+        "mappingTemplates": [
+          {
+            "type": "Mutation",
+            "field": "sendMessage",
+            "dataSource": "None",
+            "request": "Mutation-sendMessage-request.vtl",
+            "response": "Mutation-sendMessage-response.vtl"
+          }
+        ]
+      }
+    },
+    "plugins": {
+      "modules": [
+        "serverless-cf-vars",
+        "serverless-appsync-plugin"
+      ]
+    },
+    "pluginsData": {},
+    "functions": {},
+    "resources": {
+      "Resources": {
+        "AppSyncLoggingServiceRole": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "RoleName": "devNowhereChatApiServerless-AppSyncLoggingServiceRole",
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "appsync.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRole"
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": "CloudWatchLogsAccess",
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                      ],
+                      "Effect": "Allow",
+                      "Resource": [
+                        "arn:aws:logs:#{AWS::Region}:#{AWS::AccountId}:*"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Outputs": {}
+    },
+    "serviceFilename": "serverless.yml",
+    "layers": {}
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/NowhereChatApiServerless/dev/1568212952845-2019-09-11T14:42:32.845Z",
+    "artifact": ""
+  }
+}

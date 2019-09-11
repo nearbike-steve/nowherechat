@@ -1,0 +1,15 @@
+{
+  "name": "nowhere-chat-server",
+  "version": "0.0.0",
+  "description": "AWS Cloudfront via Serverless stack server for Nowhere Chat",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "sls deploy -v"
+  },
+  "author": "Stephen Heard <stephen@heardmont.com>",
+  "devDependencies": {
+    "serverless": "^1.51.0",
+    "serverless-appsync-plugin": "^1.1.2",
+    "serverless-cf-vars": "^0.3.2"
+  }
+}

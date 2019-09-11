@@ -1,0 +1,4 @@
+#set($result = $context.args.input)
+$util.qr($result.put("sentAt", $util.time.nowFormatted("yyyy-MM-dd'T'HH:mm:ss[XXXXX]")))
+
+$result

@@ -1,0 +1,30 @@
+type Message {
+  room: String!
+  user: String!
+  message: String!
+  sentAt: AWSDateTime!
+}
+
+input MessageInput {
+  room: String!
+  user: String!
+  message: String!
+}
+
+type Query {
+  dummy: String
+}
+
+type Mutation {
+  sendMessage(input: MessageInput!): Message
+}
+
+type Subscription {
+  messageSent(room: ID!): Message @aws_subscribe(mutations: ["sendMessage"])
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
