@@ -117,13 +117,13 @@
                 ]
               },
               "Description": "serverless-appsync-plugin: AppSync API Key for GraphQlApiKeyDefault",
-              "Expires": 1599753858
+              "Expires": 1599755813
             }
           },
           "GraphQlSchema": {
             "Type": "AWS::AppSync::GraphQLSchema",
             "Properties": {
-              "Definition": "type Message {\n  room: String!\n  user: String!\n  message: String!\n  sentAt: AWSDateTime!\n}\n\ninput MessageInput {\n  room: String!\n  user: String!\n  message: String!\n}\n\ntype Query {\n  dummy: String\n}\n\ntype Mutation {\n  sendMessage(input: MessageInput!): Message!\n}\n\ntype Subscription {\n  messageSent(room: String!): Message! @aws_subscribe(mutations: [\"sendMessage\"])\n}\n\nschema {\n  query: Query\n  mutation: Mutation\n  subscription: Subscription\n}\n",
+              "Definition": "type Message {\n  room: String!\n  user: String!\n  message: String!\n  sentAt: AWSDateTime!\n}\n\ninput MessageInput {\n  room: String!\n  user: String!\n  message: String!\n}\n\ntype Query {\n  dummy: String\n}\n\ntype Mutation {\n  sendMessage(input: MessageInput!): Message!\n}\n\ntype Subscription {\n  messageSent(room: String!): Message @aws_subscribe(mutations: [\"sendMessage\"])\n}\n\nschema {\n  query: Query\n  mutation: Mutation\n  subscription: Subscription\n}\n",
               "ApiId": {
                 "Fn::GetAtt": [
                   "GraphQlApi",
@@ -305,7 +305,7 @@
     "layers": {}
   },
   "package": {
-    "artifactDirectoryName": "serverless/NowhereChatApiServerless/dev/1568217858511-2019-09-11T16:04:18.511Z",
+    "artifactDirectoryName": "serverless/NowhereChatApiServerless/dev/1568219813622-2019-09-11T16:36:53.622Z",
     "artifact": ""
   }
 }

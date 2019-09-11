@@ -20,7 +20,7 @@ type Mutation {
 }
 
 type Subscription {
-  messageSent(room: String!): Message! @aws_subscribe(mutations: ["sendMessage"])
+  messageSent(room: String!): Message @aws_subscribe(mutations: ["sendMessage"])
 }
 
 schema {

@@ -1,0 +1,3 @@
+<div><b>User:</b> {{ user }}, <b>Room:</b> {{ room }} <button (click)="openDialog()">Update</button></div>
+<pre>{{ messages | json }}</pre>
+<div>Send Message: <input [(ngModel)]="message" /><button (click)="sendMessage()">Send</button></div>
