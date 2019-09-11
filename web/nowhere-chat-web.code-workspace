@@ -1,0 +1,16 @@
+{
+	"folders": [
+	  {
+		"path": "."
+	  }
+	],
+	"settings": {
+	  "prettier.singleQuote": true,
+	  "prettier.tabWidth": 2,
+	  "prettier.printWidth": 120,
+	  "editor.tabSize": 2,
+	  "editor.formatOnSave": true,
+	  "gitlens.advanced.similarityThreshold": 80
+	}
+  }
+  
