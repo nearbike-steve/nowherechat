@@ -1,0 +1,10 @@
+.grid {
+  display: grid;
+  padding: 16px;
+  grid-gap: 16px;
+  grid-template-columns: 1fr auto;
+}
+
+.messageInput {
+  font-size: 24px;
+}

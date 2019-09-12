@@ -1,0 +1,17 @@
+.grid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  margin-bottom: 36px;
+}
+
+.time {
+  font-size: 0.8em;
+}
+
+.user {
+  font-size: 0.8em;
+}
+
+.right {
+  text-align: right;
+}
